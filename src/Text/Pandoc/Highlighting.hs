@@ -18,7 +18,7 @@ module Text.Pandoc.Highlighting ( highlightingStyles
                                 , formatLaTeXInline
                                 , formatLaTeXBlock
                                 , styleToLaTeX
-                                , formatHtmlInline
+                                , formatHtmlStyled
                                 , formatHtmlBlock
                                 , styleToCss
                                 , pygments

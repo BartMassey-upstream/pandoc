@@ -45,7 +45,7 @@ import Text.DocTemplates (FromContext (lookupContext), Context (..))
 import Text.Blaze.Html hiding (contents)
 import Text.Pandoc.Translations (Term(Abstract))
 import Text.Pandoc.Definition
-import Text.Pandoc.Highlighting (formatHtmlBlock, formatHtmlInline, highlight,
+import Text.Pandoc.Highlighting (formatHtmlBlock, formatHtmlStyled, highlight,
                                  styleToCss)
 import Text.Pandoc.ImageSize
 import Text.Pandoc.Options
@@ -939,13 +939,14 @@ blockToHtmlInner opts (CodeBlock (id',classes,keyvals) rawCode) = do
       adjCode  = if tolhs
                     then T.unlines . map ("> " <>) . T.lines $ rawCode
                     else rawCode
-      hlCode   = if isJust (writerHighlightStyle opts)
-                    then let formatter = if isNothing (writerTemplate opts)
-                                         then formatHtmlInline
+      hlCode   = case writerHighlightStyle opts of
+                   Just hlStyle -> 
+                        let formatter = if isNothing (writerTemplate opts)
+                                         then (\hlOpts -> formatHtmlStyled hlOpts hlStyle)
                                          else formatHtmlBlock in
                          highlight (writerSyntaxMap opts) formatter
                             (id'',classes',keyvals) adjCode
-                    else Left ""
+                   Nothing -> Left ""
   case hlCode of
          Left msg -> do
            unless (T.null msg) $
@@ -1405,11 +1406,12 @@ inlineToHtml opts inline = do
                                modify $ \st -> st{ stHighlighting = True }
                                addAttrs opts (ids,[],kvs) $
                                  fromMaybe id sampOrVar h
-                        where hlCode = if isJust (writerHighlightStyle opts)
-                                          then highlight
+                        where hlCode =  case writerHighlightStyle opts of
+                                          Just hlStyle -> 
+                                              highlight
                                                  (writerSyntaxMap opts)
-                                                 formatHtmlInline attr str
-                                          else Left ""
+                                                 (\hlOpts -> formatHtmlStyled hlOpts hlStyle) attr str
+                                          Nothing -> Left ""
                               (sampOrVar,cs')
                                 | "sample" `elem` cs =
                                       (Just H.samp,"sample" `delete` cs)
