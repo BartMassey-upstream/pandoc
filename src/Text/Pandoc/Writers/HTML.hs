@@ -940,7 +940,10 @@ blockToHtmlInner opts (CodeBlock (id',classes,keyvals) rawCode) = do
                     then T.unlines . map ("> " <>) . T.lines $ rawCode
                     else rawCode
       hlCode   = if isJust (writerHighlightStyle opts)
-                    then highlight (writerSyntaxMap opts) formatHtmlBlock
+                    then let formatter = if isNothing (writerTemplate opts)
+                                         then formatHtmlInline
+                                         else formatHtmlBlock in
+                         highlight (writerSyntaxMap opts) formatter
                             (id'',classes',keyvals) adjCode
                     else Left ""
   case hlCode of
